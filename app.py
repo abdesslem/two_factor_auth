@@ -22,7 +22,7 @@ db = SQLAlchemy(app)
 lm = LoginManager(app)
 
 def generateToken():
-    return 123456
+    return "123456"
 
 def sendToken():
     print 'Use twilio API'
@@ -35,6 +35,9 @@ class User(UserMixin, db.Model):
     password_hash = db.Column(db.String(128))
     phone = db.Column(db.String(64))
     method = db.Column(db.String(16))
+    
+    def __init__(self, **kwargs):
+        super(User, self).__init__(**kwargs)
 
     @property
     def password(self):
@@ -104,16 +107,18 @@ def register():
 def verification():
     """two factor auth route."""
     if current_user.is_authenticated():
-        # if user is logged in we check the token
-        form = TwoFactorForm()
-        if form.validate_on_submit():
-       	    if session['token'] == form.token.data:
-                # log user in
-                login_user(user)
-                flash('You are now logged in!')
-                return redirect(url_for('index'))
-            flash('Invalid username, password or token.')
-            return redirect(url_for('verification'))
+        # if user is logged in we get out of here
+        return redirect(url_for('index'))
+    form = TwoFactorForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(username=session['username']).first()
+       	if session['token'] == form.token.data:
+            # log user in
+            login_user(user)
+            flash('You are now logged in!')
+            return redirect(url_for('index'))
+        flash(' Invalid token.')
+        return redirect(url_for('verification'))
     return render_template('verification.html', form=form)
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -126,10 +131,11 @@ def login():
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data).first()
         if user is None or not user.verify_password(form.password.data):
-            flash('Invalid username, password or token.')
+            flash('Invalid username or  password')
             return redirect(url_for('login'))
         # redirect to the two-factor auth page, passing token in the session
-        session['code'] = generateToken()
+        session['username'] = form.username.data
+        session['token'] = generateToken()
         return redirect(url_for('verification'))
 
     return render_template('login.html', form=form)
