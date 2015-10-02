@@ -11,6 +11,8 @@ from flask.ext.bootstrap import Bootstrap
 from flask.ext.wtf import Form
 from wtforms import StringField, PasswordField, SubmitField, RadioField
 from wtforms.validators import Required, Length, EqualTo
+from random import randint
+from twilio.rest import TwilioRestClient
 
 # create application instance
 app = Flask(__name__)
@@ -21,11 +23,6 @@ bootstrap = Bootstrap(app)
 db = SQLAlchemy(app)
 lm = LoginManager(app)
 
-def generateToken():
-    return "123456"
-
-def sendToken():
-    print 'Use twilio API'
 
 class User(UserMixin, db.Model):
     """User model."""
@@ -136,9 +133,24 @@ def login():
         # redirect to the two-factor auth page, passing token in the session
         session['username'] = form.username.data
         session['token'] = generateToken()
+        sendToken(session['username'], session['token'])
         return redirect(url_for('verification'))
 
     return render_template('login.html', form=form)
+
+def generateToken():
+    #return randint(100000, 999999)
+    return "123456"
+
+def sendToken(username, token):
+    user = User.query.filter_by(username=username).first()
+    client = TwilioRestClient()
+    message = client.messages.create(
+    body="Your token is password is:" + str(token),  # Message body, if any
+    to=user.phone,
+    from_= app.config['PHONE_NUMBER'],
+    )
+    flash('Token sent with success !!')
 
 
 @app.route('/logout')

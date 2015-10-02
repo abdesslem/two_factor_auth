@@ -13,6 +13,14 @@ To install your application on your computer follow these steps:
 4. Run the application with `python app.py`.
 5. Go to `http://localhost:5000` in your address bar to connect to the application.
 
+# Get Started
+
+Add your credentials to your shell environment. From the terminal, run
+
+    echo "export TWILIO_ACCOUNT_SID=<your sid>" >> ~/.bashrc
+    echo "export TWILIO_AUTH_TOKEN=<your auth token>" >> ~/.bashrc
+
+
 ## Usage
 
 There are three steps involved in building a two-factor authentication system.
