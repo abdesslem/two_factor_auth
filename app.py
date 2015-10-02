@@ -97,9 +97,11 @@ def register():
         user = User(username=form.username.data, password=form.password.data, phone=form.phone.data, method=form.method.data)
         db.session.add(user)
         db.session.commit()
+        return redirect(url_for('index'))
 
     return render_template('register.html', form=form)
 
+# TODO Limit the number of false request (brute force prevention)
 @app.route('/verification', methods=['GET', 'POST'])
 def verification():
     """two factor auth route."""
@@ -138,18 +140,30 @@ def login():
 
     return render_template('login.html', form=form)
 
+# TODO Generate more secure token
 def generateToken():
     #return randint(100000, 999999)
     return "123456"
 
+# Send the token via SMS or Voice depending of the user preferred method
 def sendToken(username, token):
     user = User.query.filter_by(username=username).first()
     client = TwilioRestClient()
-    message = client.messages.create(
-    body="Your token is password is:" + str(token),  # Message body, if any
-    to=user.phone,
-    from_= app.config['PHONE_NUMBER'],
-    )
+    if user.method == 'SMS':
+        message = client.messages.create(
+        body="Your token is:" + str(token),  # Use the token to complete login
+        to=user.phone,
+        from_= app.config['PHONE_NUMBER'],
+        )
+    elif user.method == 'Voice':
+        from twilio import twiml
+        r = twiml.Response()
+        r.say("your token is" + str(token))
+        XMLfile = open("call.xml","w")
+	XMLfile.write(str(r))
+        XMLfile.close()
+        call = client.calls.create(to=user.phone, from_=app.config['PHONE_NUMBER'],
+                           url="file://call.xml")
     flash('Token sent with success !!')
 
 
