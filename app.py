@@ -1,6 +1,5 @@
 import os
 import base64
-from io import StringIO
 from flask import Flask, render_template, redirect, url_for, flash, session, \
     abort
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -13,6 +12,7 @@ from wtforms import StringField, PasswordField, SubmitField, RadioField
 from wtforms.validators import Required, Length, EqualTo
 from random import randint
 from twilio.rest import TwilioRestClient
+import twilio
 
 # create application instance
 app = Flask(__name__)
@@ -22,6 +22,36 @@ app.config.from_object('config')
 bootstrap = Bootstrap(app)
 db = SQLAlchemy(app)
 lm = LoginManager(app)
+
+
+# Send the token via SMS or Voice depending of the user preferred method
+def sendToken(username, token):
+    user = User.query.filter_by(username=username).first()
+    client = TwilioRestClient()
+    if user.method == 'SMS':
+        try:
+            message = client.messages.create(
+            body="Your token is:" + str(token),  # Use the token to complete login
+            to=user.phone,
+            from_= app.config['PHONE_NUMBER'],
+            )
+	    flash('Token sent with success !!')
+	except twilio.TwilioRestException as e:
+            print e
+	    flash(u'Error while sending the token', 'error')
+    elif user.method == 'Voice':
+            try:
+                call = client.calls.create(to=user.phone, from_=app.config['PHONE_NUMBER'],
+                           url="http://twimlets.com/message?Message%5B0%5D=Your%20token%20is%20"+str(token)+"&")
+                flash('Token sent with success !!')
+            except twilio.TwilioRestException as e:
+    		print e
+		flash(u'Error while sending the token', 'error')
+
+# TODO Generate more secure token
+def generateToken():
+    #return randint(100000, 999999)
+    return "123456"
 
 
 class User(UserMixin, db.Model):
@@ -80,6 +110,9 @@ class TwoFactorForm(Form):
 def index():
     return render_template('index.html')
 
+@app.route('/voice')
+def voice():
+    return render_template('call.xml')
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -139,33 +172,6 @@ def login():
         return redirect(url_for('verification'))
 
     return render_template('login.html', form=form)
-
-# TODO Generate more secure token
-def generateToken():
-    #return randint(100000, 999999)
-    return "123456"
-
-# Send the token via SMS or Voice depending of the user preferred method
-def sendToken(username, token):
-    user = User.query.filter_by(username=username).first()
-    client = TwilioRestClient()
-    if user.method == 'SMS':
-        message = client.messages.create(
-        body="Your token is:" + str(token),  # Use the token to complete login
-        to=user.phone,
-        from_= app.config['PHONE_NUMBER'],
-        )
-    elif user.method == 'Voice':
-        from twilio import twiml
-        r = twiml.Response()
-        r.say("your token is" + str(token))
-        XMLfile = open("call.xml","w")
-	XMLfile.write(str(r))
-        XMLfile.close()
-        call = client.calls.create(to=user.phone, from_=app.config['PHONE_NUMBER'],
-                           url="file://call.xml")
-    flash('Token sent with success !!')
-
 
 @app.route('/logout')
 def logout():
