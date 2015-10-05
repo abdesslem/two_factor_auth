@@ -8,26 +8,23 @@ Two-Factor Authentication is a more secure way of logging in to a website. In ad
 To install your application on your computer follow these steps:
 
 1. Clone this repository.
-2. Create a virtual environment and activate it.
-3. Run `pip install -r requirements.txt` to import all the dependencies.
-4. Run the application with `python app.py`.
-5. Go to `http://localhost:5000` in your address bar to connect to the application.
+2. Run `pip install -r requirements.txt` to import all the dependencies.
+3. Add your twilio credentials to your shell environment. From the terminal, run
+```
+echo "export TWILIO_ACCOUNT_SID=<your sid>" >> ~/.bashrc
+echo "export TWILIO_AUTH_TOKEN=<your auth token>" >> ~/.bashrc
+```
+4. Set your twilio phone number (PHONE_NUMBER) in the config.py  
+5. Run the application with `python app.py`.
+6. Go to `http://localhost:5000` in your address bar to connect to the application.
 
-# Get Started
-
-Add your credentials to your shell environment. From the terminal, run
-
-    echo "export TWILIO_ACCOUNT_SID=<your sid>" >> ~/.bashrc
-    echo "export TWILIO_AUTH_TOKEN=<your auth token>" >> ~/.bashrc
-
-
-## Usage
+## How it work
 
 There are three steps involved in building a two-factor authentication system.
 
-* We want to collect the username, phone number, and the user's preferred method of contact.
+* Collect the username, phone number, and the user's preferred method of contact.
 
-* Next, we want to generate and send that password via a second (non-email/web) channel that an attacker is unlikely to have.
+* Next, Generate and send that password via a second (non-email/web) channel that an attacker is unlikely to have.
 
 * Finally, compare our originally generated password against the submitted password.
 
