@@ -90,7 +90,8 @@ class RegisterForm(Form):
     password_again = PasswordField('Password again',
                                    validators=[Required(), EqualTo('password')])
     phone = StringField('Phone', validators=[Required(), Length(1, 64)])
-    method = RadioField('Preferred method:', choices=[('SMS','You will receice the code in SMS'),('Voice','You will receive the code in a Call')])
+    method = RadioField('Preferred method:', choices=[('SMS','You will receice the code in SMS'), \
+                                                      ('Voice','You will receive the code in a Call')])
     submit = SubmitField('Register')
 
 
@@ -127,7 +128,10 @@ def register():
             flash('Username already exists.')
             return redirect(url_for('register'))
         # add new user to the database
-        user = User(username=form.username.data, password=form.password.data, phone=form.phone.data, method=form.method.data)
+        user = User(username=form.username.data, \
+                    password=form.password.data, \
+                    phone=form.phone.data, \
+                    method=form.method.data)
         db.session.add(user)
         db.session.commit()
         return redirect(url_for('index'))
