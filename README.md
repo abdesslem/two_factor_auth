@@ -18,7 +18,7 @@ echo "export TWILIO_AUTH_TOKEN=<your auth token>" >> ~/.bashrc
 5. Run the application with `python app.py`.
 6. Go to `http://localhost:5000` in your address bar to connect to the application.
 
-## How it work
+## How it works
 
 There are three steps involved in building a two-factor authentication system.
 
